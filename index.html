@@ -1,16 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Importação</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" type="image/png" href="icone.png">
+<link rel="apple-touch-icon" href="icone.png">
+
+<style>
+* { box-sizing: border-box; }
+
+:root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #ffffff;
+    --accent: #22c55e;
+    --result: #334155;
+}
+
+.light-mode {
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #0f172a;
+    --accent: #16a34a;
+    --result: #e2e8f0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 20px;
+    transition: 0.3s;
+}
+
+.container {
+    max-width: 480px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    font-size: 22px;
+}
+
+.card {
+    background: var(--card);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 10px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+}
+
+.btn-main { background: var(--accent); }
+.btn-mode { background: #64748b; }
+.btn-copy { background: #3b82f6; padding: 4px 8px; font-size: 12px; margin-left: 6px; }
+.btn-clear { background: #ef4444; }
+
+.resultado {
+    background: var(--result);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.tabela {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+}
+
+.tabela td {
+    padding: 6px;
+    border-bottom: 1px solid #9993;
+    font-size: 14px;
+}
+
+.valor-destaque {
+    font-weight: bold;
+    color: var(--accent);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Calculadora Importação</h1>
+
+    <div class="card">
+        <label>Valor Produto (USD)</label>
+        <input type="number" id="valorUsd" step="0.01">
+
+        <label>Quantidade</label>
+        <input type="number" id="quantidade" value="1" min="1">
+
+        <label>Peso (gramas)</label>
+        <input type="number" id="peso">
+
+        <label>Cotação Dólar (automática x1,099)</label>
+        <input type="number" id="cotacao" step="0.0001">
+
+        <button class="btn-main" onclick="calcular()">Calcular</button>
+        <button class="btn-main" onclick="atualizarDolar(true)">Atualizar Dólar</button>
+        <button class="btn-clear" onclick="limparTudo()">Limpar Tudo</button>
+        <button class="btn-mode" onclick="alternarModo()">Alternar Modo</button>
+    </div>
+
+    <div class="card resultado" id="resultado" style="display:none;"></div>
+</div>
+
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
 
-async function atualizarDolar(mostrarErro = true) {
+async function atualizarDolar(mostrarErro) {
     try {
         const resposta = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL");
         const dados = await resposta.json();
 
-        if (dados?.USDBRL?.bid) {
-            let cotacao = parseFloat(dados.USDBRL.bid);
-            let cotacaoFinal = cotacao * 1.099;
+        if (dados && dados.USDBRL && dados.USDBRL.bid) {
+            var cotacao = parseFloat(dados.USDBRL.bid);
+            var cotacaoFinal = cotacao * 1.099;
             document.getElementById("cotacao").value = cotacaoFinal.toFixed(4);
         } else {
             throw new Error("Formato inesperado");
@@ -23,69 +159,55 @@ async function atualizarDolar(mostrarErro = true) {
         console.log("Erro interno:", erro);
     }
 }
-  
+
 function calcular() {
-    let valorUsd = parseFloat(document.getElementById("valorUsd").value);
-    let peso = parseFloat(document.getElementById("peso").value);
-    let cotacao = parseFloat(document.getElementById("cotacao").value);
-    let quantidade = parseInt(document.getElementById("quantidade").value) || 1;
+    var valorUsd = parseFloat(document.getElementById("valorUsd").value);
+    var peso = parseFloat(document.getElementById("peso").value);
+    var cotacao = parseFloat(document.getElementById("cotacao").value);
+    var quantidade = parseInt(document.getElementById("quantidade").value) || 1;
 
     if (!valorUsd || !peso || !cotacao) {
         alert("Preencha todos os campos.");
         return;
     }
 
-    // 🔹 Produto e peso total
-    let totalUsd = valorUsd * quantidade;
-    let pesoTotal = peso * quantidade;
+    var totalUsd = valorUsd * quantidade;
+    var pesoTotal = peso * quantidade;
 
-    let produtoReais = totalUsd * cotacao;
+    var produtoReais = totalUsd * cotacao;
 
-    // 🔹 Paraguay Box (25 USD por kg convertido)
-    let paraguay = (pesoTotal / 1000) * 25 * cotacao;
+    var paraguay = (pesoTotal / 1000) * 25 * cotacao;
 
-    // 🔹 Freteiro sobre valor total
-    let freteiro = (produtoReais * 0.25) + 100;
+    var freteiro = (produtoReais * 0.25) + 100;
 
-    let custo = produtoReais + paraguay + freteiro;
+    var custo = produtoReais + paraguay + freteiro;
 
-    let percentuais = [15,20,25,30,40,50];
+    var percentuais = [15,20,25,30,40,50];
 
-    let html = `
-        <div><b>Produto Total (${quantidade}x):</b> R$ ${produtoReais.toFixed(2)}</div>
-        <div><b>Peso Total:</b> ${pesoTotal.toFixed(0)} g</div>
-        <div><b>Paraguay Box:</b> R$ ${paraguay.toFixed(2)}</div>
-        <div><b>Freteiro:</b> R$ ${freteiro.toFixed(2)}</div>
-        <div class="valor-destaque"><b>Custo Total:</b> R$ ${custo.toFixed(2)}</div>
-        <hr>
-        <table class="tabela">
-        <tr>
-            <td><b>%</b></td>
-            <td><b>Lucro</b></td>
-            <td><b>Total</b></td>
-            <td><b>Unitário</b></td>
-        </tr>
-    `;
+    var html = "";
+    html += "<div><b>Produto Total (" + quantidade + "x):</b> R$ " + produtoReais.toFixed(2) + "</div>";
+    html += "<div><b>Peso Total:</b> " + pesoTotal.toFixed(0) + " g</div>";
+    html += "<div><b>Paraguay Box:</b> R$ " + paraguay.toFixed(2) + "</div>";
+    html += "<div><b>Freteiro:</b> R$ " + freteiro.toFixed(2) + "</div>";
+    html += "<div class='valor-destaque'><b>Custo Total:</b> R$ " + custo.toFixed(2) + "</div>";
+    html += "<hr>";
+    html += "<table class='tabela'>";
+    html += "<tr><td><b>%</b></td><td><b>Lucro</b></td><td><b>Total</b></td><td><b>Unitário</b></td></tr>";
 
-    percentuais.forEach(p => {
-        let lucro = custo * (p/100);
-        let final = custo + lucro;
-        let unitario = final / quantidade;
+    for (var i = 0; i < percentuais.length; i++) {
+        var p = percentuais[i];
+        var lucro = custo * (p/100);
+        var final = custo + lucro;
+        var unitario = final / quantidade;
 
-        html += `
-            <tr>
-                <td>${p}%</td>
-                <td>R$ ${lucro.toFixed(2)}</td>
-                <td class="valor-destaque">
-                    R$ ${final.toFixed(2)}
-                    <button class="btn-copy" onclick="copiarValor('${final.toFixed(2)}')">Copiar</button>
-                </td>
-                <td class="valor-destaque">
-                    R$ ${unitario.toFixed(2)}
-                </td>
-            </tr>
-        `;
-    });
+        html += "<tr>";
+        html += "<td>" + p + "%</td>";
+        html += "<td>R$ " + lucro.toFixed(2) + "</td>";
+        html += "<td class='valor-destaque'>R$ " + final.toFixed(2) +
+                " <button class='btn-copy' onclick=\"copiarValor('" + final.toFixed(2) + "')\">Copiar</button></td>";
+        html += "<td class='valor-destaque'>R$ " + unitario.toFixed(2) + "</td>";
+        html += "</tr>";
+    }
 
     html += "</table>";
 
@@ -110,8 +232,10 @@ function limparTudo() {
     document.getElementById("resultado").style.display = "none";
 }
 
-window.onload = () => atualizarDolar(false);
+window.onload = function() {
+    atualizarDolar(false);
+};
 </script>
 
-
-
+</body>
+</html>
