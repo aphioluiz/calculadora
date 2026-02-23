@@ -5,13 +5,21 @@ if ('serviceWorker' in navigator) {
 
 async function atualizarDolar() {
     try {
-        const resposta = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL");
+        const resposta = await fetch("https://economia.awesomeapi.com.br/last/USD-BRL");
         const dados = await resposta.json();
+
+        if (!dados.USDBRL || !dados.USDBRL.bid) {
+            throw new Error("Cotação inválida");
+        }
+
         let cotacao = parseFloat(dados.USDBRL.bid);
         let cotacaoFinal = cotacao * 1.099;
+
         document.getElementById("cotacao").value = cotacaoFinal.toFixed(4);
-    } catch {
-        alert("Erro ao buscar cotação.");
+
+    } catch (erro) {
+        alert("Erro ao buscar cotação. Verifique sua internet.");
+        console.error("Erro detalhado:", erro);
     }
 }
 
@@ -103,3 +111,4 @@ function limparTudo() {
 
 window.onload = atualizarDolar;
 </script>
+
