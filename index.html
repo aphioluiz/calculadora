@@ -62,7 +62,7 @@ h1 { text-align: center; font-size: 22px; }
 .input-row { display: flex; gap: 10px; }
 .input-row div { flex: 1; }
 
-input {
+input, select {
     width: 100%;
     padding: 10px;
     margin: 5px 0 10px 0;
@@ -76,10 +76,7 @@ input {
 input[readonly] {
     background: var(--card);
     font-weight: bold;
-    opacity: 1;
 }
-
-input[type=range] { padding: 0; }
 
 button {
     width: 100%;
@@ -162,11 +159,10 @@ oninput="atualizarLucroValor(this.value)">
 </div>
 </div>
 
-<!-- NOVA OPÇÃO DE FRETEIRO (ADICIONADA) -->
 <label>Tipo de Freteiro</label>
 <select id="tipoFreteiro">
-<option value="1">Freteiro Padrão (25% + taxa)</option>
-<option value="2">Freteiro Fixo (R$ 500)</option>
+<option value="1">Freteiro padrão (25% + taxa)</option>
+<option value="2">Freteiro fixo (R$500)</option>
 </select>
 
 <button class="btn-main" onclick="calcular()">Calcular</button>
@@ -180,6 +176,7 @@ oninput="atualizarLucroValor(this.value)">
 </div>
 
 <script>
+
 if ('serviceWorker' in navigator) {
 navigator.serviceWorker.register('sw.js');
 }
@@ -236,7 +233,15 @@ var paraguay = (pesoTotal / 1000) * 25 * cotacao;
 var divisor = parseFloat(document.getElementById("divisorFrete").value);
 var taxaDividida = divisor > 0 ? 100 / divisor : 0;
 
-var freteiro = (produtoReais * 0.25) + taxaDividida;
+var tipo = document.getElementById("tipoFreteiro").value;
+
+var freteiro;
+
+if(tipo == "2"){
+freteiro = 500;
+}else{
+freteiro = (produtoReais * 0.25) + taxaDividida;
+}
 
 var custo = produtoReais + paraguay + freteiro;
 
@@ -289,45 +294,6 @@ document.getElementById("resultado").style.display = "none";
 }
 
 window.onload = atualizarDolar;
-</script>
-
-<!-- SCRIPT EXTRA PARA FRETEIRO FIXO -->
-
-<script>
-
-const calcularOriginal = calcular;
-
-calcular = function(){
-
-calcularOriginal();
-
-var tipo = document.getElementById("tipoFreteiro").value;
-
-if(tipo == "2"){
-
-var resultadoDiv = document.getElementById("resultado");
-var texto = resultadoDiv.innerHTML;
-
-var regex = /Freteiro:<\/b> R\$ ([0-9.]+)/;
-
-var match = texto.match(regex);
-
-if(match){
-
-var freteAntigo = parseFloat(match[1]);
-
-texto = texto.replace(
-"Freteiro:</b> R$ " + freteAntigo.toFixed(2),
-"Freteiro:</b> R$ 500.00"
-);
-
-resultadoDiv.innerHTML = texto;
-
-}
-
-}
-
-}
 
 </script>
 
