@@ -1,4 +1,4 @@
-const CACHE_NAME = "calculadora-cache-v3";
+const CACHE_NAME = "calculadora-cache-v4";
 
 const urlsToCache = [
   "/calculadora/",
@@ -20,4 +20,5 @@ self.addEventListener("fetch", event => {
       .then(response => response || fetch(event.request))
   );
 });
+
 
